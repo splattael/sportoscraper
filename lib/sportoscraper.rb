@@ -1,3 +1,5 @@
+require 'bundler/setup'
+
 class Sportoscraper
   require 'mechanize'
   require 'pathname'
@@ -62,9 +64,7 @@ class Sportoscraper
 
       path = @base_dir.join(tag_name).join(image_name)
       FileUtils.mkdir_p(path.dirname)
-      if path.exist?
-        puts "Skip #{image.url} (#{path})"
-      else
+      unless path.exist?
         content = yield(path)
         puts "Saving #{content.size} bytes to #{path}"
         File.open(path, "wb") do |f|
