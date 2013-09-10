@@ -138,7 +138,7 @@ class Sportoscraper
 end
 
 if $0 == __FILE__
-  RAD_AM_RING = Sportoscraper::Event.new(1655, "Rad am Ring 2012")
+  RAD_AM_RING = Sportoscraper::Event.new(2144, "Rad am Ring 2013")
   DIR = ARGV[0] || "/tmp/sportograf"
 
   tags = Sportoscraper::Overview.new(RAD_AM_RING).tags
