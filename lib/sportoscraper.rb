@@ -10,7 +10,9 @@ class Sportoscraper
 
   module Agent
     def agent
-      @agent ||= Mechanize.new
+      @agent ||= Mechanize.new.tap do |mechanize|
+        mechanize.user_agent = "Mozilla/5.0 (X11; Linux i686) AppleWebKit/537.36 (KHTML, like Gecko) Ubuntu Chromium/28.0.1500.71 Chrome/28.0.1500.71 Safari/537.36"
+      end
     end
   end
 
