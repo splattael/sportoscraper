@@ -49,7 +49,11 @@ class Sportoscraper
     end
 
     def url
-      "#{BASE_URL}#{path}"
+      if path =~ /^http/
+        path
+      else
+        "#{BASE_URL}#{path}"
+      end
     end
   end
 
@@ -101,11 +105,11 @@ class Sportoscraper
       puts "== URL: #{url}"
       page = agent.get url
       determine_next_page!(page)
-      page.search("table[class='preistabelle']").map do |table|
-        path  = table.at("td[class='bildzelle']/img")['src']
-        tds   = table.search("td[class='bildinfos']//td[class='bildbeschreibung_text_rechts']")
-        id    = tds[0].text
-        time  = tds[2].text
+      page.search("div[class='m-shop-item']").map do |table|
+        path    = table.at("div/img[class='img-responsive']")['src']
+        caption = table.search("div[class='m-shop-item--caption']/strong")
+        id      = caption[0].text
+        time    = caption[1].text
         Image.new(id, path, time)
       end
     end
@@ -140,7 +144,7 @@ class Sportoscraper
 end
 
 if $0 == __FILE__
-  RAD_AM_RING = Sportoscraper::Event.new(2144, "Rad am Ring 2013")
+  RAD_AM_RING = Sportoscraper::Event.new(2361, "Rad am Ring 2014")
   DIR = ARGV[0] || "/tmp/sportograf"
 
   tags = Sportoscraper::Overview.new(RAD_AM_RING).tags
