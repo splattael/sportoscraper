@@ -6,7 +6,7 @@ class Sportoscraper
 
   BASE_URL  = %{http://www.sportograf.com}
   OVERVIEW  = %{#{BASE_URL}/de/shop/event/%{event_id}}
-  SEARCH    = %{#{BASE_URL}/de/shop/search/%{event_id}?tag_id=%{tag_id}&page=%{page}}
+  SEARCH    = %{#{BASE_URL}/de/shop/search/%{event_id}/t/%{tag_id}?page=%{page}}
 
   module Agent
     def agent
@@ -105,8 +105,8 @@ class Sportoscraper
       puts "== URL: #{url}"
       page = agent.get url
       determine_next_page!(page)
-      page.search("div[class='m-shop-item']").map do |table|
-        path    = table.at("div/img[class='img-responsive']")['src']
+      page.search("div[class='m-shop-item js-popup-data']").map do |table|
+        path    = table.at("a/img[class='img-responsive']")['src']
         caption = table.search("div[class='m-shop-item--caption']/strong")
         id      = caption[0].text
         time    = caption[1].text
@@ -144,7 +144,7 @@ class Sportoscraper
 end
 
 if $0 == __FILE__
-  RAD_AM_RING = Sportoscraper::Event.new(2361, "Rad am Ring 2014")
+  RAD_AM_RING = Sportoscraper::Event.new(2840, "Rad am Ring 2015")
   DIR = ARGV[0] || "/tmp/sportograf"
 
   tags = Sportoscraper::Overview.new(RAD_AM_RING).tags
