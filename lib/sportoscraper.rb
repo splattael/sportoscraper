@@ -8,23 +8,21 @@ class Sportoscraper
   OVERVIEW  = %{#{BASE_URL}/de/shop/event/%{event_id}}
   SEARCH    = %{#{BASE_URL}/de/shop/search/%{event_id}/t/%{tag_id}?page=%{page}}
 
-  module Agent
-    def agent
-      @agent ||= Mechanize.new.tap do |mechanize|
-        mechanize.user_agent = "Mozilla/5.0 (X11; Linux i686) AppleWebKit/537.36 (KHTML, like Gecko) Ubuntu Chromium/28.0.1500.71 Chrome/28.0.1500.71 Safari/537.36"
-      end
+  class Agent < Mechanize
+    def initialize
+      super
+      self.user_agent = "Mozilla/5.0 (X11; Linux i686) AppleWebKit/537.36 (KHTML, like Gecko) Ubuntu Chromium/28.0.1500.71 Chrome/28.0.1500.71 Safari/537.36"
     end
   end
 
   class Overview
-    include Agent
-
-    def initialize(event)
+    def initialize(agent, event)
+      @agent = agent
       @event = event
     end
 
     def tags
-      page = agent.get OVERVIEW % { :event_id => @event.id }
+      page = @agent.get OVERVIEW % { :event_id => @event.id }
       page.search("select[id='tag_id']/option").map do |option|
         Tag.new(option['value'], option.text)
       end
@@ -81,11 +79,10 @@ class Sportoscraper
   end
 
   class Scraper
-    include Agent
-
     attr_reader :next_page
 
-    def initialize(event, tag)
+    def initialize(agent, event, tag)
+      @agent      = agent
       @event      = event
       @tag        = tag
       @next_page  = 1
@@ -103,7 +100,7 @@ class Sportoscraper
     def images
       url = SEARCH % { :event_id => @event.id, :tag_id => @tag.id, :page => @next_page }
       puts "== URL: #{url}"
-      page = agent.get url
+      page = @agent.get url
       determine_next_page!(page)
       page.search("div[class='m-shop-item js-popup-data']").map do |table|
         path    = table.at("a/img[class='img-responsive']")['src']
@@ -125,19 +122,18 @@ class Sportoscraper
     end
   end
 
-  include Agent
-
-  def initialize(event, tag, base_dir)
+  def initialize(agent, event, tag, base_dir)
+    @agent    = agent
     @event    = event
     @tag      = tag
-    @scraper  = Scraper.new(event, tag)
+    @scraper  = Scraper.new(agent, event, tag)
     @storage  = Storage.new(base_dir, event)
   end
 
   def download!
     @scraper.each do |image|
       @storage.store(@tag, image) do |path|
-        agent.get_file(image.url)
+        @agent.get_file(image.url)
       end
     end
   end
@@ -147,10 +143,12 @@ if $0 == __FILE__
   RAD_AM_RING = Sportoscraper::Event.new(2840, "Rad am Ring 2015")
   DIR = ARGV[0] || "/tmp/sportograf"
 
-  tags = Sportoscraper::Overview.new(RAD_AM_RING).tags
+  agent = Sportoscraper::Agent.new
+
+  tags = Sportoscraper::Overview.new(agent, RAD_AM_RING).tags
 
   tags.each do |tag|
-    scraper = Sportoscraper.new(RAD_AM_RING, tag, DIR)
+    scraper = Sportoscraper.new(agent, RAD_AM_RING, tag, DIR)
     scraper.download!
   end
 end
