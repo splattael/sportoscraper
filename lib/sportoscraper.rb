@@ -67,7 +67,7 @@ class Sportoscraper
       image_name = image.normalized_name
 
       path = @base_dir.join(tag_name).join(image_name)
-      FileUtils.mkdir_p(path.dirname)
+      FileUtils.mkdir_p(path.dirname) unless File.directory?(path.dirname)
       unless path.exist?
         content = yield(path)
         puts "Saving #{content.size} bytes to #{path}"
@@ -89,8 +89,7 @@ class Sportoscraper
     end
 
     def each(&block)
-      loop do
-        break unless @next_page
+      while @next_page
         images.each do |image|
           yield image
         end
@@ -101,7 +100,7 @@ class Sportoscraper
       url = SEARCH % { :event_id => @event.id, :tag_id => @tag.id, :page => @next_page }
       puts "== URL: #{url}"
       page = @agent.get url
-      determine_next_page!(page)
+      @next_page = determine_next_page(page)
       page.search("div[class='m-shop-item js-popup-data']").map do |table|
         path    = table.at("a/img[class='img-responsive']")['src']
         caption = table.search("div[class='m-shop-item--caption']/strong")
@@ -113,11 +112,9 @@ class Sportoscraper
 
     private
 
-    def determine_next_page!(page)
+    def determine_next_page(page)
       if next_page = page.at("a[rel='next']")
-        @next_page = next_page['href'][/page=(\d+)/, 1]
-      else
-        @next_page = nil
+        next_page['href'][/page=(\d+)/, 1]
       end
     end
   end
@@ -144,7 +141,6 @@ if $0 == __FILE__
   DIR = ARGV[0] || "/tmp/sportograf"
 
   agent = Sportoscraper::Agent.new
-
   tags = Sportoscraper::Overview.new(agent, RAD_AM_RING).tags
 
   tags.each do |tag|
