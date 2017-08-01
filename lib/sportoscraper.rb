@@ -1,4 +1,5 @@
 require 'bundler/setup'
+require 'json'
 
 class Sportoscraper
   require 'mechanize'
@@ -101,11 +102,12 @@ class Sportoscraper
       puts "== URL: #{url}"
       page = @agent.get url
       @next_page = determine_next_page(page)
-      page.search("div[class='m-shop-item js-popup-data']").map do |table|
-        path    = table.at("a/img[class='img-responsive']")['src']
-        caption = table.search("div[class='m-shop-item--caption']/strong")
-        id      = caption[0].text
-        time    = caption[1].text
+      page.search("div[class='m-shop-item js-popup-data']").map do |div|
+        params = JSON[div["data-params"]]
+        picture = params.fetch("picture")
+        path    = picture.fetch("url")
+        id      = picture.fetch("id")
+        time    = picture.fetch("shot_date")
         Image.new(id, path, time)
       end
     end
@@ -137,7 +139,7 @@ class Sportoscraper
 end
 
 if $0 == __FILE__
-  RAD_AM_RING = Sportoscraper::Event.new(2840, "Rad am Ring 2015")
+  RAD_AM_RING = Sportoscraper::Event.new(4006, "Rad am Ring 2017")
   DIR = ARGV[0] || "/tmp/sportograf"
 
   agent = Sportoscraper::Agent.new

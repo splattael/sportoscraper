@@ -5,6 +5,7 @@ GEM
       unf (>= 0.0.5, < 1.0.0)
     http-cookie (1.0.2)
       domain_name (~> 0.5)
+    json (2.1.0)
     mechanize (2.7.3)
       domain_name (~> 0.5, >= 0.5.1)
       http-cookie (~> 1.0)
@@ -30,7 +31,8 @@ PLATFORMS
   ruby
 
 DEPENDENCIES
+  json
   mechanize
 
 BUNDLED WITH
-   1.10.6
+   1.15.1
