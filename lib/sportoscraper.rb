@@ -40,6 +40,10 @@ class Sportoscraper
     def normalized_name
       "#{id}_#{name}"
     end
+
+    def all?
+      /ALLE/ =~ name
+    end
   end
 
   Image = Struct.new(:id, :path, :time) do
@@ -143,7 +147,7 @@ if $0 == __FILE__
   DIR = ARGV[0] || "/tmp/sportograf"
 
   agent = Sportoscraper::Agent.new
-  tags = Sportoscraper::Overview.new(agent, RAD_AM_RING).tags
+  tags = Sportoscraper::Overview.new(agent, RAD_AM_RING).tags.reject(&:all?)
 
   tags.each do |tag|
     scraper = Sportoscraper.new(agent, RAD_AM_RING, tag, DIR)
